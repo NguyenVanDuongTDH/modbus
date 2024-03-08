@@ -1,7 +1,5 @@
 import 'dart:typed_data';
 
-import '../until.dart';
-
 class ModbusFunctions {
   static const readCoils = 0x01;
   static const readDiscreteInputs = 0x02;
