@@ -158,7 +158,7 @@ class ModbusRtuCore {
       case ku8MBReadDiscreteInputs:
         List<bool> resBool = [];
         for (int byte in response.sublist(3, 3 + response[2])) {
-          for (int i = 0; i < 7; i++) {
+          for (int i = 0; i < 8; i++) {
             if (resBool.length < quantity) {
               resBool.add((byte >> i) & 1 == 1);
             } else {
@@ -175,8 +175,7 @@ class ModbusRtuCore {
             ByteData.view(response.sublist(3, 3 + response[2]).buffer);
         Uint16List uint16List = Uint16List(quantity);
         for (int i = 0; i < uint16List.length; i++) {
-          uint16List[i] =
-              byteData.getUint16(i * Uint16List.bytesPerElement, Endian.big);
+          uint16List[i] = byteData.getUint16(i * Uint16List.bytesPerElement, Endian.big);
         }
         return uint16List.toList();
     }

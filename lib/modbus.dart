@@ -11,6 +11,7 @@ export 'src/modbus_abstract.dart'
         InputRegistersConfig,
         ModbusMaster,
         ModbusSlave;
+
 export 'package:serial/serial.dart'
     show
         SerialClient,

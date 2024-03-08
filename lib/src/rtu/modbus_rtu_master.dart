@@ -21,24 +21,24 @@ class ModbusMasterRTU extends ModbusMaster {
     _slaveId = slaveId;
   }
 
-  Future<Uint8List?> _readReponse() async {
-    do {
-      if (_timeOldEvent == 0) {
-        _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
+    Future<Uint8List?> _readReponse() async {
+      do {
+        if (_timeOldEvent == 0) {
+          _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
+        }
+        await Future.delayed(const Duration(microseconds: 1));
+      } while (!ModbusRtuCore.checkLengthRePonse(_bytes) &&
+          DateTime.now().millisecondsSinceEpoch - _timeOldEvent < _timeOut);
+      _timeOldEvent = 0;
+      if (ModbusRtuCore.checkLengthRePonse(_bytes)) {
+        Uint8List res = Uint8List.fromList(_bytes);
+        _bytes.clear();
+        return res;
+      } else {
+        _bytes.clear();
+        return null;
       }
-      await Future.delayed(const Duration(microseconds: 1));
-    } while (!ModbusRtuCore.checkLengthRePonse(_bytes) &&
-        DateTime.now().millisecondsSinceEpoch - _timeOldEvent < _timeOut);
-    _timeOldEvent = 0;
-    if (ModbusRtuCore.checkLengthRePonse(_bytes)) {
-      Uint8List res = Uint8List.fromList(_bytes);
-      _bytes.clear();
-      return res;
-    } else {
-      _bytes.clear();
-      return null;
     }
-  }
 
   @override
   Future<void> close() async {
