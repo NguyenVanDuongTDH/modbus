@@ -126,7 +126,7 @@ class ModbusRtuCore {
       throw "Invalid Function";
     }
     if (bitRead(response[1], 7) != 0) {
-      throw "bitRead(response[1], 7) != 0 => ${response[2]}";
+      throw "Slave Error Return ${response[2]}";
     }
     if (response[response.length - 2] | response[response.length - 1] << 8 !=
         crc16(response, response.length - 2)) {
