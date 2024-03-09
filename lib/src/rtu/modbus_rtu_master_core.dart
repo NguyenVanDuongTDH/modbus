@@ -106,7 +106,7 @@ class ModbusRtuCore {
           return datas.length == 8;
         default:
           if (datas[1] >= 0x80) {
-            datas.length == 5;
+            return datas.length == 5;
           }
       }
     }
@@ -120,17 +120,17 @@ class ModbusRtuCore {
       required int address,
       required int quantity}) {
     if (response[0] != slaveId) {
-      throw "Invalid SlaveID";
+      ModbusExceptionString("Invalid SlaveID");
     }
     if ((response[1] & 0x7F) != functions) {
-      throw "Invalid Function";
+      throw ModbusExceptionString("Invalid Function");
     }
     if (bitRead(response[1], 7) != 0) {
-      throw "Slave Error Return ${response[2]}";
+      throw ModbusExceptionString("Slave Error Return ${response[2]}");
     }
     if (response[response.length - 2] | response[response.length - 1] << 8 !=
         crc16(response, response.length - 2)) {
-      throw "Invalid CRC";
+      throw ModbusExceptionString("Invalid CRC");
     }
 
     int i = 0;
@@ -160,6 +160,6 @@ class ModbusRtuCore {
         }
         return uint16List.toList();
     }
-    return 0;
+    return true;
   }
 }

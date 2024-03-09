@@ -40,7 +40,7 @@ class ModbusMasterRTU extends ModbusMaster {
       return res;
     } else {
       _bytes.clear();
-      throw "Error Read Request";
+      throw ModbusExceptionString("Error Read Request");
     }
   }
 
