@@ -76,42 +76,67 @@ class ModbusMasterRTU extends ModbusMaster {
 
   @override
   Future<List<bool>?> readCoils(int address, int quantity) async {
-    return await _read(0x01, address, quantity);
+    if (connected) {
+      return await _read(0x01, address, quantity);
+    }
+    return null;
   }
 
   @override
   Future<List<bool>?> readDiscreteInputs(int address, int quantity) async {
-    return await _read(0x02, address, quantity);
+    if (connected) {
+      return await _read(0x02, address, quantity);
+    }
+    return null;
   }
 
   @override
   Future<List<int>?> readHoldingRegisters(int address, int quantity) async {
-    return await _read(0x03, address, quantity);
+    if (connected) {
+      return await _read(0x03, address, quantity);
+    }
+    return null;
   }
 
   @override
   Future<List<int>?> readInputRegisters(int address, int quantity) async {
-    return await _read(0x04, address, quantity);
+    if (connected) {
+      return await _read(0x04, address, quantity);
+    }
+    return null;
   }
 
   @override
   Future<bool> writeMultipleCoils(int address, List<bool> datas) async {
-    return await _write(15, address, datas.map((e) => e ? 1 : 0).toList()) == 0;
+    if (connected) {
+      return await _write(15, address, datas.map((e) => e ? 1 : 0).toList()) ==
+          0;
+    }
+    return false;
   }
 
   @override
   Future<bool> writeMultipleRegisters(int address, List<int> datas) async {
-    return await _write(16, address, datas) == 0;
+    if (connected) {
+      return await _write(16, address, datas) == 0;
+    }
+    return false;
   }
 
   @override
   Future<bool> writeSingleCoil(int address, bool value) async {
-    return await _write(5, address, [value ? 0xff00 : 0]) == 0;
+    if (connected) {
+      return await _write(5, address, [value ? 0xff00 : 0]) == 0;
+    }
+    return false;
   }
 
   @override
   Future<bool> writeSingleRegister(int address, int value) async {
-    return await _write(6, address, [value]) == 0;
+    if (connected) {
+      return await _write(6, address, [value]) == 0;
+    }
+    return false;
   }
 
   Future<int> _write(int func, int address, List<int> datas) async {

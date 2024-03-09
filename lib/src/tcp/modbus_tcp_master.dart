@@ -74,24 +74,36 @@ class ModbusMasterTCP extends ModbusMaster {
 
   @override
   Future<List<bool>?> readCoils(int address, int quantity) async {
-    return await _read(0x01, address, quantity);
+    if (connected) {
+      return await _read(0x01, address, quantity);
+    }
+    return null;
   }
 
   @override
   Future<List<bool>?> readDiscreteInputs(int address, int quantity) async {
-    return await _read(0x02, address, quantity);
+    if (connected) {
+      return await _read(0x02, address, quantity);
+    }
+    return null;
   }
 
   @override
   Future<List<int>?> readHoldingRegisters(int address, int quantity) async {
-    if (quantity < 1 || quantity > 125) throw ModbusAmountException();
-    return await _read(0x03, address, quantity);
+    if (connected) {
+      if (quantity < 1 || quantity > 125) throw ModbusAmountException();
+      return await _read(0x03, address, quantity);
+    }
+    return null;
   }
 
   @override
   Future<List<int>?> readInputRegisters(int address, int quantity) async {
-    if (quantity < 1 || quantity > 125) throw ModbusAmountException();
-    return await _read(0x04, address, quantity);
+    if (connected) {
+      if (quantity < 1 || quantity > 125) throw ModbusAmountException();
+      return await _read(0x04, address, quantity);
+    }
+    return null;
   }
 
   @override
@@ -101,22 +113,40 @@ class ModbusMasterTCP extends ModbusMaster {
 
   @override
   Future<bool> writeMultipleCoils(int address, List<bool> datas) async {
-    return await _write(ModbusFunctions.writeMultipleCoils, address, datas);
+    if (connected) {
+      return await _write(ModbusFunctions.writeMultipleCoils, address, datas);
+    } else {
+      return false;
+    }
   }
 
   @override
   Future<bool> writeMultipleRegisters(int address, List<int> datas) async {
-    return await _write(ModbusFunctions.writeMultipleRegisters, address, datas);
+    if (connected) {
+      return await _write(
+          ModbusFunctions.writeMultipleRegisters, address, datas);
+    } else {
+      return false;
+    }
   }
 
   @override
   Future<bool> writeSingleCoil(int address, bool value) async {
-    return await _write(ModbusFunctions.writeSingleCoil, address, [value]);
+    if (connected) {
+      return await _write(ModbusFunctions.writeSingleCoil, address, [value]);
+    } else {
+      return false;
+    }
   }
 
   @override
   Future<bool> writeSingleRegister(int address, int value) async {
-    return await _write(ModbusFunctions.writeSingleRegister, address, [value]);
+    if (connected) {
+      return await _write(
+          ModbusFunctions.writeSingleRegister, address, [value]);
+    } else {
+      return false;
+    }
   }
 
   Future<bool> _write(
