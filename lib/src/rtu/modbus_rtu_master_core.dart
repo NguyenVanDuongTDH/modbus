@@ -7,7 +7,6 @@ import 'package:modbus/src/tcp/modbus_tcp_master_core.dart';
 import 'package:modbus/src/until.dart';
 
 class ModbusRtuCore {
-
   static Uint8List writeRequest(
       {required int slaveId,
       required int functions,
@@ -105,6 +104,10 @@ class ModbusRtuCore {
         case 15:
         case 16:
           return datas.length == 8;
+        default:
+          if (datas[1] >= 0x80) {
+            datas.length == 5;
+          }
       }
     }
     return false;
@@ -123,8 +126,7 @@ class ModbusRtuCore {
       throw "Invalid Function";
     }
     if (bitRead(response[1], 7) != 0) {
-      throw 
-          "bitRead(response[1], 7) != 0 => ${response[2]}";
+      throw "bitRead(response[1], 7) != 0 => ${response[2]}";
     }
     if (response[response.length - 2] | response[response.length - 1] << 8 !=
         crc16(response, response.length - 2)) {
