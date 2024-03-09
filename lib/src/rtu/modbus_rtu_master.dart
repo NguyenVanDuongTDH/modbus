@@ -159,9 +159,8 @@ class ModbusMasterRTU extends ModbusMaster {
         if (!completer.isCompleted) {
           completer.complete(res);
         }
-      }
-      if (!completer.isCompleted) {
-        completer.complete(ModbusExceptionString("error read request"));
+      } else {
+        throw ModbusExceptionString("error read request");
       }
     });
 
@@ -196,15 +195,15 @@ class ModbusMasterRTU extends ModbusMaster {
         if (!completer.isCompleted) {
           completer.complete(res);
         }
-      } else if (!completer.isCompleted) {
-        completer.complete(ModbusExceptionString("null read request"));
+      } else {
+        throw ModbusExceptionString("null read request");
       }
     });
 
     dynamic res = await completer.future.timeout(
       Duration(milliseconds: _timeOut),
       onTimeout: () {
-        return ModbusExceptionString("time out");
+        throw ModbusExceptionString("time out");
       },
     );
     if (res is int) {
