@@ -2,31 +2,11 @@
 
 import 'dart:typed_data';
 
+import 'package:modbus/src/tcp/exceptions.dart';
+import 'package:modbus/src/tcp/modbus_tcp_master_core.dart';
 import 'package:modbus/src/until.dart';
 
 class ModbusRtuCore {
-  static const int _ku8MaxBufferSize = 64;
-//
-  static const int ku8MBReadCoils = 0x01;
-  static const int ku8MBReadDiscreteInputs = 0x02;
-  static const int ku8MBWriteSingleCoil = 0x05;
-  static const int ku8MBWriteMultipleCoils = 0x0F;
-  static const int ku8MBReadHoldingRegisters = 0x03;
-  static const int ku8MBReadInputRegisters = 0x04;
-  static const int ku8MBWriteSingleRegister = 0x06;
-  static const int ku8MBWriteMultipleRegisters = 0x10;
-  static const int ku8MBMaskWriteRegister = 0x16;
-  static const int ku8MBReadWriteMultipleRegisters = 0x17;
-
-  static const int _ku8MBIllegalFunction = 0x01;
-  static const int _ku8MBIllegalDataAddress = 0x02;
-  static const int _ku8MBIllegalDataValue = 0x03;
-  static const int _ku8MBSlaveDeviceFailure = 0x04;
-  static const int _ku8MBSuccess = 0x00;
-  static const int _ku8MBInvalidSlaveID = 0xE0;
-  static const int _ku8MBInvalidFunction = 0xE1;
-  static const int _ku8MBResponseTimedOut = 0xE2;
-  static const int _ku8MBInvalidCRC = 0xE3;
 
   static Uint8List writeRequest(
       {required int slaveId,
@@ -39,35 +19,33 @@ class ModbusRtuCore {
       ..setUint8(1, functions)
       ..setUint16(2, address);
     switch (functions) {
-      case ku8MBWriteSingleCoil:
+      case ModbusFunctions.writeSingleCoil:
         ByteData.view(DPU.buffer).setInt16(4, datas[0], Endian.big);
         ByteData.view(DPU.buffer).setInt16(6, crc16(DPU, 6), Endian.little);
         return DPU.sublist(0, 8);
-      case ku8MBWriteSingleRegister:
+      case ModbusFunctions.writeSingleRegister:
         ByteData.view(DPU.buffer).setInt16(4, datas[0], Endian.big);
         ByteData.view(DPU.buffer).setInt16(6, crc16(DPU, 6), Endian.little);
         return DPU.sublist(0, 8);
 
-      case ku8MBWriteMultipleCoils:
+      case ModbusFunctions.writeMultipleCoils:
         ByteData.view(DPU.buffer).setInt16(4, datas.length, Endian.big);
         DPU[6] = (datas.length / 8).ceil();
-        
+
         for (int i = 0; i < datas.length; i += 8) {
           int value = 0;
           for (int j = 0; j < 8 && i + j < datas.length; j++) {
             if (datas[i + j] != 0) {
-              DPU[(i ~/ 8) + 7] |= (1 << j); 
+              DPU[(i ~/ 8) + 7] |= (1 << j);
             }
           }
-          
         }
-
 
         ByteData.view(DPU.buffer)
             .setInt16(7 + DPU[6], crc16(DPU, 7 + DPU[6]), Endian.little);
         return DPU.sublist(0, 9 + DPU[6]);
 
-      case ku8MBWriteMultipleRegisters:
+      case ModbusFunctions.writeMultipleRegisters:
         ByteData.view(DPU.buffer)
           ..setInt16(4, datas.length, Endian.big)
           ..setUint8(6, lowByte(datas.length << 1));
@@ -139,23 +117,24 @@ class ModbusRtuCore {
       required int address,
       required int quantity}) {
     if (response[0] != slaveId) {
-      return _ku8MBInvalidSlaveID;
+      throw ModbusExceptionString("Invalid SlaveID");
     }
     if ((response[1] & 0x7F) != functions) {
-      return _ku8MBInvalidFunction;
+      throw ModbusExceptionString("Invalid Function");
     }
     if (bitRead(response[1], 7) != 0) {
-      return response[2];
+      throw ModbusExceptionString(
+          "bitRead(response[1], 7) != 0 => ${response[2]}");
     }
     if (response[response.length - 2] | response[response.length - 1] << 8 !=
         crc16(response, response.length - 2)) {
-      return _ku8MBInvalidCRC;
+      throw ModbusExceptionString("Invalid CRC");
     }
 
     int i = 0;
     switch (response[1]) {
-      case ku8MBReadCoils:
-      case ku8MBReadDiscreteInputs:
+      case ModbusFunctions.readCoils:
+      case ModbusFunctions.readDiscreteInputs:
         List<bool> resBool = [];
         for (int byte in response.sublist(3, 3 + response[2])) {
           for (int i = 0; i < 8; i++) {
@@ -168,14 +147,14 @@ class ModbusRtuCore {
         }
         return resBool;
 
-      case ku8MBReadInputRegisters:
-      case ku8MBReadHoldingRegisters:
-      case ku8MBReadWriteMultipleRegisters:
+      case ModbusFunctions.readInputRegisters:
+      case ModbusFunctions.readHoldingRegisters:
         ByteData byteData =
             ByteData.view(response.sublist(3, 3 + response[2]).buffer);
         Uint16List uint16List = Uint16List(quantity);
         for (int i = 0; i < uint16List.length; i++) {
-          uint16List[i] = byteData.getUint16(i * Uint16List.bytesPerElement, Endian.big);
+          uint16List[i] =
+              byteData.getUint16(i * Uint16List.bytesPerElement, Endian.big);
         }
         return uint16List.toList();
     }

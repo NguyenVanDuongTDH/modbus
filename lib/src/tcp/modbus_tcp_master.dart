@@ -91,7 +91,9 @@ class ModbusMasterTCP extends ModbusMaster {
   @override
   Future<List<int>?> readHoldingRegisters(int address, int quantity) async {
     if (connected) {
-      if (quantity < 1 || quantity > 125) throw ModbusAmountException();
+      if (quantity < 1 || quantity > 125) {
+        throw ModbusExceptionString("quantity");
+      }
       return await _read(0x03, address, quantity);
     }
     return null;
@@ -100,7 +102,9 @@ class ModbusMasterTCP extends ModbusMaster {
   @override
   Future<List<int>?> readInputRegisters(int address, int quantity) async {
     if (connected) {
-      if (quantity < 1 || quantity > 125) throw ModbusAmountException();
+      if (quantity < 1 || quantity > 125) {
+        throw ModbusExceptionString("quantity");
+      }
       return await _read(0x04, address, quantity);
     }
     return null;
@@ -178,6 +182,9 @@ class ModbusMasterTCP extends ModbusMaster {
         return null;
       },
     );
+    if (res == null) {
+      return false;
+    }
     return res == 0;
   }
 

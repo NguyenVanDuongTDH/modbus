@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'package:modbus/src/modbus_abstract.dart';
 import 'package:modbus/src/stack.dart';
+import 'package:modbus/src/tcp/exceptions.dart';
 import 'package:serial/serial.dart';
 
 import 'modbus_rtu_master_core.dart';
@@ -184,6 +185,7 @@ class ModbusMasterRTU extends ModbusMaster {
           quantity: quantity));
 
       final rePonse = await _readReponse();
+
       if (rePonse != null) {
         final res = ModbusRtuCore.readReponse(
             response: rePonse,
@@ -194,9 +196,8 @@ class ModbusMasterRTU extends ModbusMaster {
         if (!completer.isCompleted) {
           completer.complete(res);
         }
-      }
-      if (!completer.isCompleted) {
-        completer.complete(null);
+      } else if (!completer.isCompleted) {
+        completer.complete(ModbusExceptionString("null read request"));
       }
     });
 

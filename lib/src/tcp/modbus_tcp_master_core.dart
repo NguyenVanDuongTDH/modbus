@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'package:modbus/src/tcp/exceptions.dart';
+
 class ModbusFunctions {
   static const readCoils = 0x01;
   static const readDiscreteInputs = 0x02;
@@ -13,13 +15,6 @@ class ModbusFunctions {
   static const reportSlaveId = 0x11;
 }
 
-class ModbusException {
-  static const int illegalFunction = 0x01;
-  static const int success = 0x00;
-  static const int invalidSlaveID = 0xE0;
-  static const int invalidFunction = 0xE1;
-}
-
 class ModbusMasterTCPCore {
   static bool checkLenght(Uint8List reponse) {
     if (reponse.length >= 8) {
@@ -27,7 +22,7 @@ class ModbusMasterTCPCore {
       int len = view.getUint16(4);
       int function = view.getUint8(7);
       if (function > 0x80) return true;
-      return  len + 6 == reponse.length;
+      return len + 6 == reponse.length;
     } else {
       return false;
     }
@@ -47,7 +42,7 @@ class ModbusMasterTCPCore {
     int _function = view.getUint8(7);
     int lenBuffer = view.getInt8(8);
     if (_unitId != slaveId) {
-      return ModbusException.invalidSlaveID;
+      throw ModbusExceptionString("invalid SlaveID");
     }
 
     if (_function != functions) {
