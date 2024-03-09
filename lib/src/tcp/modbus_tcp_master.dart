@@ -24,6 +24,7 @@ class ModbusMasterTCP extends ModbusMaster {
   @override
   Future<void> close() async {
     _serial.close();
+    _connected = false;
   }
 
   Future<Uint8List?> _readReponse() async {
@@ -47,24 +48,28 @@ class ModbusMasterTCP extends ModbusMaster {
 
   @override
   Future<bool> connect() async {
-    bool res = await _serial.connect();
-    _serial.listen(
-      (event) {
-        if (DateTime.now().millisecondsSinceEpoch - _timeOldEvent > _timeOut) {
-          _bytes.clear();
-          _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
-        } else {
-          _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
-        }
-        _bytes.addAll(event);
-        // print(event);
-      },
-      onDone: () {
-        _connected = false;
-      },
-    );
-    _connected = res;
-    return res;
+    if (connected) {
+      bool res = await _serial.connect();
+      _serial.listen(
+        (event) {
+          if (DateTime.now().millisecondsSinceEpoch - _timeOldEvent >
+              _timeOut) {
+            _bytes.clear();
+            _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
+          } else {
+            _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
+          }
+          _bytes.addAll(event);
+          // print(event);
+        },
+        onDone: () {
+          _connected = false;
+        },
+      );
+      _connected = res;
+      return res;
+    }
+    return connected;
   }
 
   @override

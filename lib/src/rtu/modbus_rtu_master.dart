@@ -45,25 +45,33 @@ class ModbusMasterRTU extends ModbusMaster {
 
   @override
   Future<void> close() async {
+    _connected = false;
     _serial.close();
   }
 
   @override
   Future<bool> connect() async {
-    bool res = await _serial.connect();
-    _serial.listen((event) {
-      if (DateTime.now().millisecondsSinceEpoch - _timeOldEvent > _timeOut) {
-        _bytes.clear();
-        _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
-      } else {
-        _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
-      }
-      _bytes.addAll(event);
-    }, onDone: () {
-      _connected = false;
-    },);
-    _connected = res;
-    return res;
+    if (_connected == false) {
+      bool res = await _serial.connect();
+      _serial.listen(
+        (event) {
+          if (DateTime.now().millisecondsSinceEpoch - _timeOldEvent >
+              _timeOut) {
+            _bytes.clear();
+            _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
+          } else {
+            _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
+          }
+          _bytes.addAll(event);
+        },
+        onDone: () {
+          _connected = false;
+        },
+      );
+      _connected = res;
+      return res;
+    }
+    return _connected;
   }
 
   @override
