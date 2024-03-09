@@ -161,7 +161,7 @@ class ModbusMasterRTU extends ModbusMaster {
         }
       }
       if (!completer.isCompleted) {
-        completer.complete(null);
+        completer.complete(ModbusExceptionString("error read request"));
       }
     });
 
@@ -204,11 +204,11 @@ class ModbusMasterRTU extends ModbusMaster {
     dynamic res = await completer.future.timeout(
       Duration(milliseconds: _timeOut),
       onTimeout: () {
-        return null;
+        return ModbusExceptionString("time out");
       },
     );
     if (res is int) {
-      return null;
+      throw ModbusExceptionString("null read request");
     } else {
       return res;
     }
