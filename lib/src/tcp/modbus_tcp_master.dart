@@ -27,7 +27,7 @@ class ModbusMasterTCP extends ModbusMaster {
     _connected = false;
   }
 
-  Future<Uint8List?> _readReponse() async {
+  Future<Uint8List> _readReponse() async {
     do {
       if (_timeOldEvent == 0) {
         _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
@@ -42,7 +42,7 @@ class ModbusMasterTCP extends ModbusMaster {
       return res;
     } else {
       _bytes.clear();
-      return null;
+      throw "Error Read Request";
     }
   }
 
@@ -92,7 +92,7 @@ class ModbusMasterTCP extends ModbusMaster {
   Future<List<int>?> readHoldingRegisters(int address, int quantity) async {
     if (connected) {
       if (quantity < 1 || quantity > 125) {
-        throw ModbusExceptionString("quantity");
+        throw "quantity";
       }
       return await _read(0x03, address, quantity);
     }
@@ -103,7 +103,7 @@ class ModbusMasterTCP extends ModbusMaster {
   Future<List<int>?> readInputRegisters(int address, int quantity) async {
     if (connected) {
       if (quantity < 1 || quantity > 125) {
-        throw ModbusExceptionString("quantity");
+        throw "quantity";
       }
       return await _read(0x04, address, quantity);
     }
@@ -201,23 +201,18 @@ class ModbusMasterTCP extends ModbusMaster {
       final response = await _readReponse();
 
       completer.complete(ModbusMasterTCPCore.readReponse(
-          response: response!,
+          response: response,
           count: tempCount,
           slaveId: _slaveId,
           functions: function,
           address: address,
           quantity: quantity));
     });
-    dynamic res = await completer.future.timeout(
+    return await completer.future.timeout(
       Duration(milliseconds: _timeOut),
       onTimeout: () {
-        return null;
+        throw "Time Out";
       },
     );
-    if (res is int) {
-      return null;
-    } else {
-      return res;
-    }
   }
 }

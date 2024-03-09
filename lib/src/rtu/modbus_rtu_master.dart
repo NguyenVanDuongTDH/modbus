@@ -25,7 +25,7 @@ class ModbusMasterRTU extends ModbusMaster {
     _slaveId = slaveId;
   }
 
-  Future<Uint8List?> _readReponse() async {
+  Future<Uint8List> _readReponse() async {
     do {
       if (_timeOldEvent == 0) {
         _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
@@ -40,7 +40,7 @@ class ModbusMasterRTU extends ModbusMaster {
       return res;
     } else {
       _bytes.clear();
-      return null;
+      throw "Error Read Request";
     }
   }
 
@@ -110,8 +110,7 @@ class ModbusMasterRTU extends ModbusMaster {
   @override
   Future<bool> writeMultipleCoils(int address, List<bool> datas) async {
     if (connected) {
-      return await _write(15, address, datas.map((e) => e ? 1 : 0).toList()) ==
-          0;
+      return await _write(15, address, datas.map((e) => e ? 1 : 0).toList());
     }
     return false;
   }
@@ -119,7 +118,7 @@ class ModbusMasterRTU extends ModbusMaster {
   @override
   Future<bool> writeMultipleRegisters(int address, List<int> datas) async {
     if (connected) {
-      return await _write(16, address, datas) == 0;
+      return await _write(16, address, datas);
     }
     return false;
   }
@@ -127,7 +126,7 @@ class ModbusMasterRTU extends ModbusMaster {
   @override
   Future<bool> writeSingleCoil(int address, bool value) async {
     if (connected) {
-      return await _write(5, address, [value ? 0xff00 : 0]) == 0;
+      return await _write(5, address, [value ? 0xff00 : 0]);
     }
     return false;
   }
@@ -135,12 +134,12 @@ class ModbusMasterRTU extends ModbusMaster {
   @override
   Future<bool> writeSingleRegister(int address, int value) async {
     if (connected) {
-      return await _write(6, address, [value]) == 0;
+      return await _write(6, address, [value]);
     }
     return false;
   }
 
-  Future<int> _write(int func, int address, List<int> datas) async {
+  Future<bool> _write(int func, int address, List<int> datas) async {
     Completer completer = Completer();
     _stack.excute(() async {
       _bytes.clear();
@@ -149,18 +148,14 @@ class ModbusMasterRTU extends ModbusMaster {
 
       final rePonse = await _readReponse();
 
-      if (rePonse != null) {
-        final res = ModbusRtuCore.readReponse(
-            response: rePonse,
-            slaveId: _slaveId,
-            functions: func,
-            address: address,
-            quantity: 0);
-        if (!completer.isCompleted) {
-          completer.complete(res);
-        }
-      } else {
-        throw ModbusExceptionString("error read request");
+      final res = ModbusRtuCore.readReponse(
+          response: rePonse,
+          slaveId: _slaveId,
+          functions: func,
+          address: address,
+          quantity: 0);
+      if (!completer.isCompleted) {
+        completer.complete(res);
       }
     });
 
@@ -170,7 +165,7 @@ class ModbusMasterRTU extends ModbusMaster {
         return null;
       },
     );
-    return res;
+    return res == 0;
   }
 
   Future<dynamic> _read(int func, int address, int quantity) async {
@@ -185,32 +180,23 @@ class ModbusMasterRTU extends ModbusMaster {
 
       final rePonse = await _readReponse();
 
-      if (rePonse != null) {
-        final res = ModbusRtuCore.readReponse(
-            response: rePonse,
-            slaveId: _slaveId,
-            functions: func,
-            address: address,
-            quantity: quantity);
-        if (!completer.isCompleted) {
-          completer.complete(res);
-        }
-      } else {
-        throw ModbusExceptionString("null read request");
+      final res = ModbusRtuCore.readReponse(
+          response: rePonse,
+          slaveId: _slaveId,
+          functions: func,
+          address: address,
+          quantity: quantity);
+      if (!completer.isCompleted) {
+        completer.complete(res);
       }
     });
 
-    dynamic res = await completer.future.timeout(
+    return await completer.future.timeout(
       Duration(milliseconds: _timeOut),
       onTimeout: () {
         throw ModbusExceptionString("time out");
       },
     );
-    if (res is int) {
-      throw ModbusExceptionString("null read request");
-    } else {
-      return res;
-    }
   }
 }
 

@@ -117,18 +117,18 @@ class ModbusRtuCore {
       required int address,
       required int quantity}) {
     if (response[0] != slaveId) {
-      throw ModbusExceptionString("Invalid SlaveID");
+      throw "Invalid SlaveID";
     }
     if ((response[1] & 0x7F) != functions) {
-      throw ModbusExceptionString("Invalid Function");
+      throw "Invalid Function";
     }
     if (bitRead(response[1], 7) != 0) {
-      throw ModbusExceptionString(
-          "bitRead(response[1], 7) != 0 => ${response[2]}");
+      throw 
+          "bitRead(response[1], 7) != 0 => ${response[2]}";
     }
     if (response[response.length - 2] | response[response.length - 1] << 8 !=
         crc16(response, response.length - 2)) {
-      throw ModbusExceptionString("Invalid CRC");
+      throw "Invalid CRC";
     }
 
     int i = 0;
