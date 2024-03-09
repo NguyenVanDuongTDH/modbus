@@ -172,7 +172,7 @@ class ModbusMasterRTU extends ModbusMaster {
         return null;
       },
     );
-    return res == 0;
+    return res;
   }
 
   Future<dynamic> _read(int func, int address, int quantity) async {
