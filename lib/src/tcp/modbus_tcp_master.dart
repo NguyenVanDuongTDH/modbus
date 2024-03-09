@@ -15,9 +15,12 @@ class ModbusMasterTCP extends ModbusMaster {
   int _timeOldEvent = 0;
   int _timeOut = 1000;
   int _count = 0;
+  bool _connected = false;
 
   ModbusMasterTCP(SerialClient serial) : _serial = serial;
-
+  @override
+  // TODO: implement connected
+  bool get connected => _connected;
   @override
   Future<void> close() async {
     _serial.close();
@@ -45,16 +48,22 @@ class ModbusMasterTCP extends ModbusMaster {
   @override
   Future<bool> connect() async {
     bool res = await _serial.connect();
-    _serial.listen((event) {
-      if (DateTime.now().millisecondsSinceEpoch - _timeOldEvent > _timeOut) {
-        _bytes.clear();
-        _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
-      } else {
-        _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
-      }
-      _bytes.addAll(event);
-      // print(event);
-    });
+    _serial.listen(
+      (event) {
+        if (DateTime.now().millisecondsSinceEpoch - _timeOldEvent > _timeOut) {
+          _bytes.clear();
+          _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
+        } else {
+          _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
+        }
+        _bytes.addAll(event);
+        // print(event);
+      },
+      onDone: () {
+        _connected = false;
+      },
+    );
+    _connected = res;
     return res;
   }
 

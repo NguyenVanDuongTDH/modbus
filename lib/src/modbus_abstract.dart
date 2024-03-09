@@ -13,6 +13,8 @@ abstract class ModbusMaster {
   static ModbusMasterTCP TCP(SerialClient serial) {
     return ModbusMasterTCP(serial);
   }
+  bool get connected;
+
 
   void setSlaveId(int slaveId);
 

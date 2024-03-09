@@ -13,32 +13,35 @@ class ModbusMasterRTU extends ModbusMaster {
   List<int> _bytes = [];
   int _timeOldEvent = 0;
   int _timeOut = 1000;
+  bool _connected = false;
 
   ModbusMasterRTU(SerialClient serial) : _serial = serial;
+  @override
+  bool get connected => _connected;
 
   @override
   void setSlaveId(int slaveId) {
     _slaveId = slaveId;
   }
 
-    Future<Uint8List?> _readReponse() async {
-      do {
-        if (_timeOldEvent == 0) {
-          _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
-        }
-        await Future.delayed(const Duration(microseconds: 1));
-      } while (!ModbusRtuCore.checkLengthRePonse(_bytes) &&
-          DateTime.now().millisecondsSinceEpoch - _timeOldEvent < _timeOut);
-      _timeOldEvent = 0;
-      if (ModbusRtuCore.checkLengthRePonse(_bytes)) {
-        Uint8List res = Uint8List.fromList(_bytes);
-        _bytes.clear();
-        return res;
-      } else {
-        _bytes.clear();
-        return null;
+  Future<Uint8List?> _readReponse() async {
+    do {
+      if (_timeOldEvent == 0) {
+        _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
       }
+      await Future.delayed(const Duration(microseconds: 1));
+    } while (!ModbusRtuCore.checkLengthRePonse(_bytes) &&
+        DateTime.now().millisecondsSinceEpoch - _timeOldEvent < _timeOut);
+    _timeOldEvent = 0;
+    if (ModbusRtuCore.checkLengthRePonse(_bytes)) {
+      Uint8List res = Uint8List.fromList(_bytes);
+      _bytes.clear();
+      return res;
+    } else {
+      _bytes.clear();
+      return null;
     }
+  }
 
   @override
   Future<void> close() async {
@@ -56,7 +59,10 @@ class ModbusMasterRTU extends ModbusMaster {
         _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
       }
       _bytes.addAll(event);
-    });
+    }, onDone: () {
+      _connected = false;
+    },);
+    _connected = res;
     return res;
   }
 
