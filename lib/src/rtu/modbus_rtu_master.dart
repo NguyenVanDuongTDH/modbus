@@ -142,20 +142,27 @@ class ModbusMasterRTU extends ModbusMaster {
   Future<bool> _write(int func, int address, List<int> datas) async {
     Completer completer = Completer();
     _stack.excute(() async {
-      _bytes.clear();
-      _serial.write(ModbusRtuCore.writeRequest(
-          slaveId: _slaveId, functions: func, address: address, datas: datas));
+      try {
+        _bytes.clear();
+        _serial.write(ModbusRtuCore.writeRequest(
+            slaveId: _slaveId,
+            functions: func,
+            address: address,
+            datas: datas));
 
-      final rePonse = await _readReponse();
+        final rePonse = await _readReponse();
 
-      final res = ModbusRtuCore.readReponse(
-          response: rePonse,
-          slaveId: _slaveId,
-          functions: func,
-          address: address,
-          quantity: 0);
-      if (!completer.isCompleted) {
-        completer.complete(res);
+        final res = ModbusRtuCore.readReponse(
+            response: rePonse,
+            slaveId: _slaveId,
+            functions: func,
+            address: address,
+            quantity: 0);
+        if (!completer.isCompleted) {
+          completer.complete(res);
+        }
+      } catch (e) {
+        completer.completeError(e);
       }
     });
 
@@ -171,23 +178,25 @@ class ModbusMasterRTU extends ModbusMaster {
   Future<dynamic> _read(int func, int address, int quantity) async {
     Completer completer = Completer();
     _stack.excute(() async {
-      _bytes.clear();
-      _serial.write(ModbusRtuCore.readRequest(
-          slaveId: _slaveId,
-          functions: func,
-          address: address,
-          quantity: quantity));
-
-      final rePonse = await _readReponse();
-
-      final res = ModbusRtuCore.readReponse(
-          response: rePonse,
-          slaveId: _slaveId,
-          functions: func,
-          address: address,
-          quantity: quantity);
-      if (!completer.isCompleted) {
-        completer.complete(res);
+      try {
+        _bytes.clear();
+        _serial.write(ModbusRtuCore.readRequest(
+            slaveId: _slaveId,
+            functions: func,
+            address: address,
+            quantity: quantity));
+        final rePonse = await _readReponse();
+        final res = ModbusRtuCore.readReponse(
+            response: rePonse,
+            slaveId: _slaveId,
+            functions: func,
+            address: address,
+            quantity: quantity);
+        if (!completer.isCompleted) {
+          completer.complete(res);
+        }
+      } catch (e) {
+        completer.completeError(e);
       }
     });
 
