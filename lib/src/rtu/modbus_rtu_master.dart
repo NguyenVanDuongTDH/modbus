@@ -79,35 +79,43 @@ class ModbusMasterRTU extends ModbusMaster {
   }
 
   @override
-  Future<List<bool>?> readCoils(int address, int quantity) async {
+  Future<List<bool>> readCoils(int address, int quantity) async {
     if (connected) {
       return await _read(0x01, address, quantity);
     }
-    return null;
+    else {
+      throw ModbusException(ModbusError.Not_Connect);
+    }
   }
 
   @override
-  Future<List<bool>?> readDiscreteInputs(int address, int quantity) async {
+  Future<List<bool>> readDiscreteInputs(int address, int quantity) async {
     if (connected) {
       return await _read(0x02, address, quantity);
     }
-    return null;
+    else {
+      throw ModbusException(ModbusError.Not_Connect);
+    }
   }
 
   @override
-  Future<List<int>?> readHoldingRegisters(int address, int quantity) async {
+  Future<List<int>> readHoldingRegisters(int address, int quantity) async {
     if (connected) {
       return await _read(0x03, address, quantity);
     }
-    return null;
+    else {
+      throw ModbusException(ModbusError.Not_Connect);
+    }
   }
 
   @override
-  Future<List<int>?> readInputRegisters(int address, int quantity) async {
+  Future<List<int>> readInputRegisters(int address, int quantity) async {
     if (connected) {
       return await _read(0x04, address, quantity);
     }
-    return null;
+    else {
+      throw ModbusException(ModbusError.Not_Connect);
+    }
   }
 
   @override
@@ -115,7 +123,9 @@ class ModbusMasterRTU extends ModbusMaster {
     if (connected) {
       return await _write(15, address, datas.map((e) => e ? 1 : 0).toList());
     }
-    return false;
+    else {
+      throw ModbusException(ModbusError.Not_Connect);
+    }
   }
 
   @override
@@ -123,7 +133,9 @@ class ModbusMasterRTU extends ModbusMaster {
     if (connected) {
       return await _write(16, address, datas);
     }
-    return false;
+    else {
+      throw ModbusException(ModbusError.Not_Connect);
+    }
   }
 
   @override
@@ -131,7 +143,9 @@ class ModbusMasterRTU extends ModbusMaster {
     if (connected) {
       return await _write(5, address, [value ? 0xff00 : 0]);
     }
-    return false;
+    else {
+      throw ModbusException(ModbusError.Not_Connect);
+    }
   }
 
   @override
@@ -139,7 +153,9 @@ class ModbusMasterRTU extends ModbusMaster {
     if (connected) {
       return await _write(6, address, [value]);
     }
-    return false;
+    else {
+      throw ModbusException(ModbusError.Not_Connect);
+    }
   }
 
   Future<bool> _write(int func, int address, List<int> datas) async {
