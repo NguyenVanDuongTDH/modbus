@@ -5,7 +5,7 @@ import 'package:modbus/modbus.dart';
 import 'package:modbus/src/stack.dart';
 import 'package:modbus/src/tcp/modbus_tcp_master_core.dart';
 
-import 'exceptions.dart';
+import '../exceptions.dart';
 
 class ModbusMasterTCP extends ModbusMaster {
   SerialClient _serial;
@@ -48,24 +48,25 @@ class ModbusMasterTCP extends ModbusMaster {
 
   @override
   Future<bool> connect() async {
-    if (connected) {
+    if (connected == false) {
       bool res = await _serial.connect();
-      _serial.listen(
-        (event) {
-          if (DateTime.now().millisecondsSinceEpoch - _timeOldEvent >
-              _timeOut) {
-            _bytes.clear();
-            _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
-          } else {
-            _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
-          }
-          _bytes.addAll(event);
-          // print(event);
-        },
-        onDone: () {
-          _connected = false;
-        },
-      );
+      if (res) {
+        _serial.listen(
+          (event) {
+            if (DateTime.now().millisecondsSinceEpoch - _timeOldEvent >
+                _timeOut) {
+              _bytes.clear();
+              _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
+            } else {
+              _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
+            }
+            _bytes.addAll(event);
+          },
+          onDone: () {
+            _connected = false;
+          },
+        );
+      }
       _connected = res;
       return res;
     }
@@ -76,38 +77,42 @@ class ModbusMasterTCP extends ModbusMaster {
   Future<List<bool>?> readCoils(int address, int quantity) async {
     if (connected) {
       return await _read(0x01, address, quantity);
+    } else {
+      throw ModbusException(ModbusError.Not_Connect);
     }
-    return null;
   }
 
   @override
   Future<List<bool>?> readDiscreteInputs(int address, int quantity) async {
     if (connected) {
       return await _read(0x02, address, quantity);
+    } else {
+      throw ModbusException(ModbusError.Not_Connect);
     }
-    return null;
   }
 
   @override
   Future<List<int>?> readHoldingRegisters(int address, int quantity) async {
     if (connected) {
       if (quantity < 1 || quantity > 125) {
-        throw "quantity";
+        throw ModbusException(ModbusError.Invalid_Quantity);
       }
       return await _read(0x03, address, quantity);
+    } else {
+      throw ModbusException(ModbusError.Not_Connect);
     }
-    return null;
   }
 
   @override
   Future<List<int>?> readInputRegisters(int address, int quantity) async {
     if (connected) {
       if (quantity < 1 || quantity > 125) {
-        throw "quantity";
+        throw ModbusException(ModbusError.Invalid_Quantity);
       }
       return await _read(0x04, address, quantity);
+    } else {
+      throw ModbusException(ModbusError.Not_Connect);
     }
-    return null;
   }
 
   @override
@@ -120,7 +125,7 @@ class ModbusMasterTCP extends ModbusMaster {
     if (connected) {
       return await _write(ModbusFunctions.writeMultipleCoils, address, datas);
     } else {
-      return false;
+      throw ModbusException(ModbusError.Not_Connect);
     }
   }
 
@@ -130,7 +135,7 @@ class ModbusMasterTCP extends ModbusMaster {
       return await _write(
           ModbusFunctions.writeMultipleRegisters, address, datas);
     } else {
-      return false;
+      throw ModbusException(ModbusError.Not_Connect);
     }
   }
 
@@ -139,7 +144,7 @@ class ModbusMasterTCP extends ModbusMaster {
     if (connected) {
       return await _write(ModbusFunctions.writeSingleCoil, address, [value]);
     } else {
-      return false;
+      throw ModbusException(ModbusError.Not_Connect);
     }
   }
 
@@ -149,7 +154,7 @@ class ModbusMasterTCP extends ModbusMaster {
       return await _write(
           ModbusFunctions.writeSingleRegister, address, [value]);
     } else {
-      return false;
+      throw ModbusException(ModbusError.Not_Connect);
     }
   }
 
@@ -160,58 +165,60 @@ class ModbusMasterTCP extends ModbusMaster {
   ) async {
     Completer completer = Completer();
     _stack.excute(() async {
-      _count < 0xFFF ? _count++ : _count = 0;
-      int tempCount = _count;
-
-      _bytes.clear();
-      final request = ModbusMasterTCPCore.writeRequest(
-          tempCount, _slaveId, function, address, values);
-      _serial.write(request);
-      final response = await _readReponse();
-      completer.complete(ModbusMasterTCPCore.readReponse(
-          response: response!,
-          count: tempCount,
-          slaveId: _slaveId,
-          functions: function,
-          address: address,
-          quantity: values.length));
+      try {
+        _count < 0xFFF ? _count++ : _count = 0;
+        int tempCount = _count;
+        _bytes.clear();
+        final request = ModbusMasterTCPCore.writeRequest(
+            tempCount, _slaveId, function, address, values);
+        _serial.write(request);
+        final response = await _readReponse();
+        completer.complete(ModbusMasterTCPCore.readReponse(
+            response: response,
+            count: tempCount,
+            slaveId: _slaveId,
+            functions: function,
+            address: address,
+            quantity: values.length));
+      } catch (e) {
+        completer.completeError(e);
+      }
     });
-    dynamic res = await completer.future.timeout(
+    return await completer.future.timeout(
       Duration(milliseconds: _timeOut),
       onTimeout: () {
-        return null;
+        throw ModbusException(ModbusError.Time_Out);
       },
     );
-    if (res == null) {
-      return false;
-    }
-    return res == 0;
   }
 
   Future<dynamic> _read(int function, int address, int quantity) async {
     Completer completer = Completer();
     _stack.excute(() async {
-      _count < 0xFFF ? _count++ : _count = 0;
-      int tempCount = _count;
+      try {
+        _count < 0xFFF ? _count++ : _count = 0;
+        int tempCount = _count;
+        _bytes.clear();
+        final request = ModbusMasterTCPCore.readRequest(
+            tempCount, _slaveId, function, address, quantity);
+        _serial.write(request);
+        final response = await _readReponse();
 
-      _bytes.clear();
-      final request = ModbusMasterTCPCore.readRequest(
-          tempCount, _slaveId, function, address, quantity);
-      _serial.write(request);
-      final response = await _readReponse();
-
-      completer.complete(ModbusMasterTCPCore.readReponse(
-          response: response,
-          count: tempCount,
-          slaveId: _slaveId,
-          functions: function,
-          address: address,
-          quantity: quantity));
+        completer.complete(ModbusMasterTCPCore.readReponse(
+            response: response,
+            count: tempCount,
+            slaveId: _slaveId,
+            functions: function,
+            address: address,
+            quantity: quantity));
+      } catch (e) {
+        completer.completeError(e);
+      }
     });
     return await completer.future.timeout(
       Duration(milliseconds: _timeOut),
       onTimeout: () {
-        throw "Time Out";
+        throw ModbusException(ModbusError.Time_Out);
       },
     );
   }

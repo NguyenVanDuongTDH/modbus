@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:modbus/src/tcp/exceptions.dart';
+import 'package:modbus/src/exceptions.dart';
+import 'package:modbus/src/until.dart';
 
 class ModbusFunctions {
   static const readCoils = 0x01;
@@ -41,15 +42,17 @@ class ModbusMasterTCPCore {
     int _unitId = view.getUint8(6);
     int _function = view.getUint8(7);
     int lenBuffer = view.getInt8(8);
-    if (_unitId != slaveId) {
-      throw ModbusExceptionString("invalid SlaveID");
-    }
-
-    if (_function != functions) {
-      return lenBuffer;
-    }
     if (_count != count) {
-      return -1;
+      return false;
+    }
+    if (_unitId != slaveId) {
+      throw ModbusException(ModbusError.Invalid_SlaveID);
+    }
+    if ((_function & 0x7F) != functions) {
+      throw ModbusException(ModbusError.Invalid_Function);
+    }
+    if (bitRead(_function, 7) != 0) {
+      throw ModbusException(ModbusError.Slave_Error_Return);
     }
 
     switch (functions) {
@@ -78,7 +81,7 @@ class ModbusMasterTCPCore {
         }
         return uint16List.toList();
     }
-    return 0;
+    return true;
   }
 
   static Uint8List writeRequest(

@@ -1,10 +1,11 @@
+// ignore_for_file: prefer_final_fields
+
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:modbus/src/modbus_abstract.dart';
 import 'package:modbus/src/stack.dart';
-import 'package:modbus/src/tcp/exceptions.dart';
+import 'package:modbus/src/exceptions.dart';
 import 'package:serial/serial.dart';
-
 import 'modbus_rtu_master_core.dart';
 
 class ModbusMasterRTU extends ModbusMaster {
@@ -40,7 +41,7 @@ class ModbusMasterRTU extends ModbusMaster {
       return res;
     } else {
       _bytes.clear();
-      throw ModbusExceptionString("Error Read Request");
+      throw ModbusException(ModbusError.Error_Read_Request);
     }
   }
 
@@ -54,23 +55,25 @@ class ModbusMasterRTU extends ModbusMaster {
   Future<bool> connect() async {
     if (_connected == false) {
       bool res = await _serial.connect();
-      _serial.listen(
-        (event) {
-          if (DateTime.now().millisecondsSinceEpoch - _timeOldEvent >
-              _timeOut) {
-            _bytes.clear();
-            _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
-          } else {
-            _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
-          }
-          _bytes.addAll(event);
-        },
-        onDone: () {
-          _connected = false;
-        },
-      );
-      _connected = res;
-      return res;
+      if (res) {
+        _serial.listen(
+          (event) {
+            if (DateTime.now().millisecondsSinceEpoch - _timeOldEvent >
+                _timeOut) {
+              _bytes.clear();
+              _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
+            } else {
+              _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
+            }
+            _bytes.addAll(event);
+          },
+          onDone: () {
+            _connected = false;
+          },
+        );
+        _connected = res;
+        return res;
+      }
     }
     return _connected;
   }
@@ -203,7 +206,7 @@ class ModbusMasterRTU extends ModbusMaster {
     return await completer.future.timeout(
       Duration(milliseconds: _timeOut),
       onTimeout: () {
-        throw ModbusExceptionString("time out");
+        throw ModbusException(ModbusError.Time_Out);
       },
     );
   }

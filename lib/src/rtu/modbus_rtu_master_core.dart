@@ -2,7 +2,7 @@
 
 import 'dart:typed_data';
 
-import 'package:modbus/src/tcp/exceptions.dart';
+import 'package:modbus/src/exceptions.dart';
 import 'package:modbus/src/tcp/modbus_tcp_master_core.dart';
 import 'package:modbus/src/until.dart';
 
@@ -92,7 +92,7 @@ class ModbusRtuCore {
   }
 
   static bool checkLengthRePonse(List<int> datas) {
-    if (datas.length > 3) {
+    if (datas.length > 4) {
       switch (datas[1]) {
         case 1:
         case 2:
@@ -120,17 +120,17 @@ class ModbusRtuCore {
       required int address,
       required int quantity}) {
     if (response[0] != slaveId) {
-      ModbusExceptionString("Invalid SlaveID");
+      throw ModbusException(ModbusError.Invalid_SlaveID);
     }
     if ((response[1] & 0x7F) != functions) {
-      throw ModbusExceptionString("Invalid Function");
+      throw ModbusException(ModbusError.Invalid_Function);
     }
     if (bitRead(response[1], 7) != 0) {
-      throw ModbusExceptionString("Slave Error Return ${response[2]}");
+      throw ModbusException(ModbusError.Slave_Error_Return);
     }
     if (response[response.length - 2] | response[response.length - 1] << 8 !=
         crc16(response, response.length - 2)) {
-      throw ModbusExceptionString("Invalid CRC");
+      throw ModbusException(ModbusError.Invalid_CRC);
     }
 
     int i = 0;
