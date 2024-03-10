@@ -21,6 +21,6 @@ export 'package:serial/serial.dart'
         SerialWindowsClientUSB,
         SerialWindowsServerUSB,
         SerialPortParity;
-export 'src/exceptions.dart' show ModbusException, ModbusError;
+export 'src/exceptions.dart' show ModbusException, ModbusError,ModbusErrorExtension;
 
 // TODO: Export any libraries intended for clients of this package.
