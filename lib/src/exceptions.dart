@@ -21,5 +21,9 @@ class _ModbusException implements Exception {
 }
 
 class ModbusException extends _ModbusException {
+  bool isError(ModbusError error) {
+    return error == this.error;
+  }
+
   ModbusException(super.error);
 }
