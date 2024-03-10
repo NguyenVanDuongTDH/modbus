@@ -133,7 +133,6 @@ class ModbusRtuCore {
       throw ModbusException(ModbusError.Invalid_CRC);
     }
 
-    int i = 0;
     switch (response[1]) {
       case ModbusFunctions.readCoils:
       case ModbusFunctions.readDiscreteInputs:
