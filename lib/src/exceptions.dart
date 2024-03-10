@@ -8,7 +8,7 @@ enum ModbusError {
   Time_Out,
   Error_Read_Request,
   Not_Connect,
-  Invalid_Quantity
+  Invalid_Quantity,
 }
 
 class _ModbusException implements Exception {
@@ -21,9 +21,19 @@ class _ModbusException implements Exception {
 }
 
 class ModbusException extends _ModbusException {
-  bool isError(ModbusError error) {
+  bool equals(ModbusError error) {
     return error == this.error;
   }
 
   ModbusException(super.error);
+}
+
+extension ModbusErrorExtension on ModbusError {
+  bool equals(Object exception) {
+    if (exception is ModbusException) {
+      return exception.error == this;
+    } else {
+      return false;
+    }
+  }
 }
