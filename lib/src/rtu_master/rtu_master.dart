@@ -2,10 +2,10 @@
 
 import 'dart:async';
 import 'package:modbus/src/modbus_abstract.dart';
-import 'package:modbus/src/rtu/modbus_rtu_master_core.dart';
 import 'package:modbus/src/rtu_master/rtu_respose.dart';
 import 'package:modbus/src/stack.dart';
 import 'package:modbus/src/exceptions.dart';
+import 'package:modbus/src/tcp/modbus_tcp_master_core.dart';
 import 'package:serial/serial.dart';
 import 'rtu_request.dart';
 
@@ -74,23 +74,27 @@ class ModbusMasterRTUTest extends ModbusMaster {
 
   @override
   Future<List<bool>> readCoils(int address, int quantity) async {
-    return (await _read(0x01, address, quantity)).map((e) => e != 0).toList();
+    return (await _read(ModbusFunctions.readCoils, address, quantity))
+        .map((e) => e != 0)
+        .toList();
   }
 
   @override
   Future<List<bool>> readDiscreteInputs(int address, int quantity) async {
-    return (await _read(0x02, address, quantity)).map((e) => e != 0).toList();
+    return (await _read(ModbusFunctions.readDiscreteInputs, address, quantity))
+        .map((e) => e != 0)
+        .toList();
   }
 
   @override
   Future<List<int>> readHoldingRegisters(int address, int quantity) async {
-    return await _read(0x03, address, quantity);
+    return await _read(ModbusFunctions.readHoldingRegisters, address, quantity);
   }
 
   @override
   Future<List<int>> readInputRegisters(int address, int quantity) async {
     if (connected) {
-      return await _read(0x04, address, quantity);
+      return await _read(ModbusFunctions.readInputRegisters, address, quantity);
     } else {
       throw ModbusException(ModbusError.Not_Connect);
     }
@@ -99,7 +103,8 @@ class ModbusMasterRTUTest extends ModbusMaster {
   @override
   Future<bool> writeMultipleCoils(int address, List<bool> datas) async {
     if (connected) {
-      return await _write(15, address, datas.map((e) => e ? 1 : 0).toList());
+      return await _write(ModbusFunctions.writeMultipleCoils, address,
+          datas.map((e) => e ? 1 : 0).toList());
     } else {
       throw ModbusException(ModbusError.Not_Connect);
     }
@@ -108,7 +113,8 @@ class ModbusMasterRTUTest extends ModbusMaster {
   @override
   Future<bool> writeMultipleRegisters(int address, List<int> datas) async {
     if (connected) {
-      return await _write(16, address, datas);
+      return await _write(
+          ModbusFunctions.writeMultipleRegisters, address, datas);
     } else {
       throw ModbusException(ModbusError.Not_Connect);
     }
@@ -117,7 +123,8 @@ class ModbusMasterRTUTest extends ModbusMaster {
   @override
   Future<bool> writeSingleCoil(int address, bool value) async {
     if (connected) {
-      return await _write(5, address, [value ? 0xff00 : 0]);
+      return await _write(
+          ModbusFunctions.writeSingleCoil, address, [value ? 0xff00 : 0]);
     } else {
       throw ModbusException(ModbusError.Not_Connect);
     }
@@ -126,7 +133,8 @@ class ModbusMasterRTUTest extends ModbusMaster {
   @override
   Future<bool> writeSingleRegister(int address, int value) async {
     if (connected) {
-      return await _write(6, address, [value]);
+      return await _write(
+          ModbusFunctions.writeSingleRegister, address, [value]);
     } else {
       throw ModbusException(ModbusError.Not_Connect);
     }
@@ -134,7 +142,7 @@ class ModbusMasterRTUTest extends ModbusMaster {
 
   Future<bool> _write(int function, int address, List<int> datas) async {
     int index = 0;
-    if(!connected){
+    if (!connected) {
       throw ModbusException(ModbusError.Not_Connect);
     }
     do {
