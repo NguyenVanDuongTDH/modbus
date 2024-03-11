@@ -1,23 +1,15 @@
 import 'dart:typed_data';
 
 import 'package:modbus/modbus.dart';
+import 'package:modbus/src/rtu_master/rtu_master.dart';
 
 Uint16List data = Uint16List(100);
 Future<void> main() async {
-  
-  SerialServer serial = SerialWindowsServerUSB("COM11");
-  ModbusSlave slave = ModbusSlave.RTU(serial);
-  slave.configHoldingRegisters(HoldingRegistersConfig(
-    0,
-    10,
-    writeRegisters: (address, value) {
-      print("Registers[$address] = $value");
-      data[address] = value;
-    },
-    readRegisters: (address) {
-      print("read[$address] = ${data[address]}");
-      return data[address];
-    },
-  ));
-  slave.bind();
+  SerialClient serial = SerialWindowsClientUSB("COM4", baudRate: 115200);
+  ModbusMaster slave = ModbusMaster.RTU(serial);
+  slave.setSlaveId(1);
+  await slave.connect();
+  print(await slave.writeMultipleRegisters(0, [1, 1221]));
+  print(await slave.readHoldingRegisters(0, 10));
+  slave.close();
 }

@@ -3,7 +3,7 @@
 import 'dart:typed_data';
 
 import 'package:modbus/modbus.dart';
-import 'package:modbus/src/new_rtu/rtu_request.dart';
+import 'package:modbus/src/rtu_master/rtu_request.dart';
 
 import '../tcp/modbus_tcp_master_core.dart';
 import '../until.dart';
@@ -21,6 +21,9 @@ class RtuResPonse {
     if (DateTime.now().millisecondsSinceEpoch - startTime > timeOut) {
       error = ModbusError.Time_Out;
       return true;
+    }
+    if (bytes.length < 5) {
+      return false;
     }
     if (checkError(bytes, ctx)) {
       return true;
@@ -63,10 +66,10 @@ class RtuResPonse {
   bool checkWriteRepose(List<int> bytes, RtuRequest ctx) {
     if (bytes.length == 8) {
       if (crcError(bytes)) {
-        response.clear();
-        response.add(0);
         return true;
       }
+      response.clear();
+      response.add(0);
       return true;
     } else if (bytes.length < 8) {
       return false;

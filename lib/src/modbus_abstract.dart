@@ -1,13 +1,17 @@
 import 'package:modbus/modbus.dart';
 import 'package:modbus/src/rtu/modbus_rtu_master.dart';
 import 'package:modbus/src/rtu/modbus_rtu_slave.dart';
+import 'package:modbus/src/rtu_master/rtu_master.dart';
 import 'package:serial/serial.dart';
 
 import 'tcp/modbus_tcp_master.dart';
 
 abstract class ModbusMaster {
-  static ModbusMasterRTU RTU(SerialClient serial) {
-    return ModbusMasterRTU(serial);
+  // static ModbusMasterRTU RTU(SerialClient serial) {
+  //   return ModbusMasterRTU(serial);
+  // }
+   static ModbusMasterRTUTest RTU(SerialClient serial) {
+    return ModbusMasterRTUTest(serial);
   }
 
   static ModbusMasterTCP TCP(SerialClient serial) {

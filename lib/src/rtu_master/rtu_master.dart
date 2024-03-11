@@ -2,7 +2,8 @@
 
 import 'dart:async';
 import 'package:modbus/src/modbus_abstract.dart';
-import 'package:modbus/src/new_rtu/rtu_respose.dart';
+import 'package:modbus/src/rtu/modbus_rtu_master_core.dart';
+import 'package:modbus/src/rtu_master/rtu_respose.dart';
 import 'package:modbus/src/stack.dart';
 import 'package:modbus/src/exceptions.dart';
 import 'package:serial/serial.dart';
@@ -73,29 +74,17 @@ class ModbusMasterRTUTest extends ModbusMaster {
 
   @override
   Future<List<bool>> readCoils(int address, int quantity) async {
-    if (connected) {
-      return await _read(0x01, address, quantity);
-    } else {
-      throw ModbusException(ModbusError.Not_Connect);
-    }
+    return (await _read(0x01, address, quantity)).map((e) => e != 0).toList();
   }
 
   @override
   Future<List<bool>> readDiscreteInputs(int address, int quantity) async {
-    if (connected) {
-      return await _read(0x02, address, quantity);
-    } else {
-      throw ModbusException(ModbusError.Not_Connect);
-    }
+    return (await _read(0x02, address, quantity)).map((e) => e != 0).toList();
   }
 
   @override
   Future<List<int>> readHoldingRegisters(int address, int quantity) async {
-    if (connected) {
-      return await _read(0x03, address, quantity);
-    } else {
-      throw ModbusException(ModbusError.Not_Connect);
-    }
+    return await _read(0x03, address, quantity);
   }
 
   @override
@@ -144,7 +133,28 @@ class ModbusMasterRTUTest extends ModbusMaster {
   }
 
   Future<bool> _write(int function, int address, List<int> datas) async {
-    Completer completer = Completer();
+    int index = 0;
+    if(!connected){
+      throw ModbusException(ModbusError.Not_Connect);
+    }
+    do {
+      try {
+        return await __write(function, address, datas);
+      } catch (e) {
+        if (e is ModbusException &&
+            e.equals(ModbusError.Invalid_CRC) &&
+            index < 3) {
+          index++;
+        } else {
+          rethrow;
+        }
+      }
+    } while (index < 3);
+    throw ModbusException(ModbusError.Done_Know);
+  }
+
+  Future<bool> __write(int function, int address, List<int> datas) async {
+    Completer<bool> completer = Completer();
     _stack.excute(() async {
       _ctx = RtuRequest.write(
           slaveId: _slaveId,
@@ -155,16 +165,37 @@ class ModbusMasterRTUTest extends ModbusMaster {
       _serial.write(_ctx!.request);
 
       final res = await _readReponse();
-      if (res.error.equals(ModbusError.Not_Error)) {
-        completer.complete(res.response[0]);
-      } else {
+      if (res.error != ModbusError.Not_Error) {
         completer.completeError(res.error);
+      } else {
+        completer.complete(res.response[0] == 0);
       }
     });
     return await completer.future;
   }
 
-  Future<dynamic> _read(int function, int address, int quantity) async {
+  Future<List<int>> _read(int function, int address, int quantity) async {
+    int index = 0;
+    if (!connected) {
+      throw ModbusException(ModbusError.Not_Connect);
+    }
+    do {
+      try {
+        return await __read(function, address, quantity);
+      } catch (e) {
+        if (index < 3 && e is ModbusException) {
+          if (e.equals(ModbusError.Invalid_CRC)) {
+            index += 1;
+          }
+        } else {
+          rethrow;
+        }
+      }
+    } while (index < 3);
+    throw ModbusException(ModbusError.Done_Know);
+  }
+
+  Future<List<int>> __read(int function, int address, int quantity) async {
     Completer completer = Completer();
     _stack.excute(() async {
       _ctx = RtuRequest.read(

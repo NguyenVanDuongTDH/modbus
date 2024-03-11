@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:modbus/modbus.dart';
 import 'package:modbus/src/until.dart';
-
 import '../tcp/modbus_tcp_master_core.dart';
 
 class RtuRequest {
@@ -18,7 +17,7 @@ class RtuRequest {
       required this.function,
       required this.quantity,
       required this.address,
-      required List<int> datas});
+      required this. datas});
 
   factory RtuRequest.write(
       {required int slaveId,
@@ -28,7 +27,7 @@ class RtuRequest {
     return RtuRequest._(
         slaveId: slaveId,
         function: function,
-        quantity: -1,
+        quantity: datas.length,
         address: address,
         datas: datas);
   }
@@ -109,7 +108,6 @@ class RtuRequest {
       case ModbusFunctions.writeMultipleCoils:
         ByteData.view(DPU.buffer).setInt16(4, datas.length, Endian.big);
         DPU[6] = (datas.length / 8).ceil();
-
         for (int i = 0; i < datas.length; i += 8) {
           for (int j = 0; j < 8 && i + j < datas.length; j++) {
             if (datas[i + j] != 0) {
@@ -117,6 +115,7 @@ class RtuRequest {
             }
           }
         }
+
         ByteData.view(DPU.buffer)
             .setInt16(7 + DPU[6], crc16(DPU, 7 + DPU[6]), Endian.little);
         return DPU.sublist(0, 9 + DPU[6]);
@@ -125,6 +124,7 @@ class RtuRequest {
         ByteData.view(DPU.buffer)
           ..setInt16(4, datas.length, Endian.big)
           ..setUint8(6, lowByte(datas.length << 1));
+        ;
 
         for (int i = 0; i < datas.length; i++) {
           ByteData.view(DPU.buffer).setUint16(7 + i * 2, datas[i], Endian.big);
