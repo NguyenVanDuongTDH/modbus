@@ -17,7 +17,7 @@ class RtuRequest {
       required this.function,
       required this.quantity,
       required this.address,
-      required this. datas});
+      required this.datas});
 
   factory RtuRequest.write(
       {required int slaveId,
@@ -67,7 +67,7 @@ class RtuRequest {
             address: address,
             datas: datas);
     }
-    throw ModbusException(ModbusError.Done_Know);
+    throw ModbusException(ModbusError.Done_Know_Get_Request);
   }
 
   static Uint8List _readRequest(
@@ -95,11 +95,13 @@ class RtuRequest {
       ..setUint8(0, slaveId)
       ..setUint8(1, functions)
       ..setUint16(2, address);
+
     switch (functions) {
       case ModbusFunctions.writeSingleCoil:
         ByteData.view(DPU.buffer).setInt16(4, datas[0], Endian.big);
         ByteData.view(DPU.buffer).setInt16(6, crc16(DPU, 6), Endian.little);
         return DPU.sublist(0, 8);
+
       case ModbusFunctions.writeSingleRegister:
         ByteData.view(DPU.buffer).setInt16(4, datas[0], Endian.big);
         ByteData.view(DPU.buffer).setInt16(6, crc16(DPU, 6), Endian.little);
@@ -124,7 +126,6 @@ class RtuRequest {
         ByteData.view(DPU.buffer)
           ..setInt16(4, datas.length, Endian.big)
           ..setUint8(6, lowByte(datas.length << 1));
-        ;
 
         for (int i = 0; i < datas.length; i++) {
           ByteData.view(DPU.buffer).setUint16(7 + i * 2, datas[i], Endian.big);
@@ -133,6 +134,6 @@ class RtuRequest {
             .setInt16(7 + DPU[6], crc16(DPU, 7 + DPU[6]), Endian.little);
         return DPU.sublist(0, 9 + DPU[6]);
     }
-    return Uint8List(0);
+    throw ModbusException(ModbusError.Done_Know_Write_Request);
   }
 }

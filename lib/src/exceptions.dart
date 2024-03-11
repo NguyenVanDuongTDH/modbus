@@ -8,7 +8,7 @@ enum ModbusError {
   Time_Out,
   Error_Read_Request,
   Not_Connect,
-  Invalid_Quantity, Not_Error, Not_Ready, Done_Know,
+  Invalid_Quantity, Not_Error, Not_Ready, Done_Know, Done_Know_Write_Request, Done_Know_Get_Request,
 }
 
 class _ModbusException implements Exception {
