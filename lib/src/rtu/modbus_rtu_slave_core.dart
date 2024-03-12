@@ -34,6 +34,7 @@ class ModbusRtuSlaveCore {
       if (_isListen == false) {
         _isListen == true;
         final request = await _readReponse();
+        print(request);
         process(request!);
       }
     }, onDone: onclose);

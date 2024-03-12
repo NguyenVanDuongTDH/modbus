@@ -5,11 +5,18 @@ import 'package:modbus/src/rtu_master/rtu_master.dart';
 
 Uint16List data = Uint16List(100);
 Future<void> main() async {
-  SerialClient serial = SerialWindowsClientUSB("COM4", baudRate: 115200);
-  ModbusMaster slave = ModbusMaster.RTU(serial);
-  slave.setSlaveId(1);
-  await slave.connect();
-  print(await slave.writeMultipleRegisters(0, [1, 1221]));
-  print(await slave.readHoldingRegisters(0, 10));
-  slave.close();
+  SerialServer serial = SerialWindowsServerUSB("COM3",
+      baudRate: 9600, bits: 8, parity: 0, stopBits: 1);
+  ModbusSlave slave = ModbusSlave.RTU(serial);
+  slave.configHoldingRegisters(HoldingRegistersConfig(
+    0,
+    100,
+    writeRegisters: (address, value) {
+      data[address] = value;
+    },
+    readRegisters: (address) {
+      return 1;
+    },
+  ));
+  slave.bind();
 }
