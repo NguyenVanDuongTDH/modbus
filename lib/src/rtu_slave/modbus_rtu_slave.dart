@@ -1,5 +1,5 @@
 import 'package:modbus/modbus.dart';
-import 'package:modbus/src/rtu/modbus_rtu_slave_core.dart';
+import 'package:modbus/src/rtu_slave/modbus_rtu_slave_core.dart';
 
 class ModbusSlaveRTU extends ModbusSlave {
   SerialServer _server;

@@ -5,7 +5,7 @@ import 'package:modbus/src/modbus_abstract.dart';
 import 'package:modbus/src/rtu_master/rtu_respose.dart';
 import 'package:modbus/src/stack.dart';
 import 'package:modbus/src/exceptions.dart';
-import 'package:modbus/src/tcp/modbus_tcp_master_core.dart';
+import 'package:modbus/src/tcp_master/modbus_tcp_master_core.dart';
 import 'package:serial/serial.dart';
 import 'rtu_request.dart';
 

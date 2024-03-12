@@ -7,7 +7,7 @@
 // ignore_for_file: curly_braces_in_flow_control_structures, prefer_final_fields
 
 import 'dart:typed_data';
-import 'package:modbus/src/rtu/modbus_rtu_slave.dart';
+import 'package:modbus/src/rtu_slave/modbus_rtu_slave.dart';
 import 'package:modbus/src/until.dart';
 import 'package:serial/serial.dart';
 

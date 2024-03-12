@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:modbus/modbus.dart';
 import 'package:modbus/src/rtu_master/rtu_request.dart';
 
-import '../tcp/modbus_tcp_master_core.dart';
+import '../tcp_master/modbus_tcp_master_core.dart';
 import '../until.dart';
 
 class RtuResPonse {

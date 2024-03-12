@@ -1,16 +1,18 @@
+// ignore_for_file: prefer_final_fields
+
 import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:modbus/modbus.dart';
 import 'package:modbus/src/stack.dart';
-import 'package:modbus/src/tcp/modbus_tcp_master_core.dart';
+import 'package:modbus/src/tcp_master/modbus_tcp_master_core.dart';
 
 import '../exceptions.dart';
 
 class ModbusMasterTCP extends ModbusMaster {
   SerialClient _serial;
   int _slaveId = 1;
-  Stack _stack = Stack();
+  final Stack _stack = Stack();
   List<int> _bytes = [];
   int _timeOldEvent = 0;
   int _timeOut = 1000;
