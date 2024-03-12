@@ -1,7 +1,5 @@
 import 'package:modbus/modbus.dart';
-import 'package:modbus/src/modbus_abstract.dart';
 import 'package:modbus/src/rtu/modbus_rtu_slave_core.dart';
-import 'package:serial/serial.dart';
 
 class ModbusSlaveRTU extends ModbusSlave {
   SerialServer _server;
@@ -39,7 +37,7 @@ class ModbusSlaveRTU extends ModbusSlave {
   void configDiscreteInputs(DiscreteInputsConfig config) {
     discreteInputs = config;
   }
-  
+
   @override
   void configureInputRegisters(InputRegistersConfig config) {
     inputRegisters = config;

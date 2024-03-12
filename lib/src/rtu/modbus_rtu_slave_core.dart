@@ -13,10 +13,8 @@ import 'package:serial/serial.dart';
 
 class ModbusRtuSlaveCore {
   SerialClient _serial;
-  int _timeOldEvent = 0;
-  int _timeOut = 100;
+  int _timeOut = 300;
   List<int> _bytes = [];
-  bool _isListen = false;
   ModbusSlaveRTU _ctx;
   void Function()? onclose;
 
@@ -24,45 +22,31 @@ class ModbusRtuSlaveCore {
       : _serial = serial,
         _ctx = ctx {
     serial.listen((event) async {
-      if (DateTime.now().millisecondsSinceEpoch - _timeOldEvent > _timeOut) {
-        _bytes.clear();
-        _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
-      } else {
-        _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
-      }
       _bytes.addAll(event);
-      if (_isListen == false) {
-        _isListen == true;
-        final request = await _readReponse();
-        print(request);
-        process(request!);
-      }
+      readData();
     }, onDone: onclose);
   }
 
-  Future<Uint8List?> _readReponse() async {
-    do {
-      if (_timeOldEvent == 0) {
-        _timeOldEvent = DateTime.now().millisecondsSinceEpoch;
+  bool isloop = false;
+  Future<void> readData() async {
+    if (isloop == false) {
+      int timeStart = DateTime.now().millisecondsSinceEpoch;
+      isloop = true;
+      do {
+        await Future.delayed(const Duration(milliseconds: 1));
+      } while (!checkLength(_bytes) &&
+          DateTime.now().millisecondsSinceEpoch - timeStart < _timeOut);
+      if (_bytes.length >= 8) {
+        process(Uint8List.fromList(_bytes));
       }
-      await Future.delayed(const Duration(microseconds: 1));
-    } while (!checkLength(_bytes) &&
-        DateTime.now().millisecondsSinceEpoch - _timeOldEvent < _timeOut);
-    _timeOldEvent = 0;
-    if (checkLength(_bytes)) {
-      Uint8List res = Uint8List.fromList(_bytes);
       _bytes.clear();
-      return res;
-    } else {
-      _bytes.clear();
-      return null;
+      isloop = false;
     }
   }
 
   static bool checkLength(List<int> bytes) {
-    if (bytes.length > 256) {
-      return false;
-    }
+    if (bytes.length > 256) return false;
+    if (bytes.length < 8) return false;
     switch (bytes[1]) {
       case 1:
       case 2:
@@ -74,8 +58,9 @@ class ModbusRtuSlaveCore {
       case 15:
       case 16:
         return bytes.length == 9 + bytes[6];
+      default:
+        return false;
     }
-    return false;
   }
 
   bool process(Uint8List bytes) {
@@ -270,10 +255,8 @@ class ModbusRtuSlaveCore {
           bytes[3 + (i >> 3)] =
               bitWrite(bytes[3 + (i >> 3)], i & 7, read ? 1 : 0);
         }
-        // print(bytes);
         _writeResponse(bytes, 3 + bytes[2]);
       } catch (e) {
-        // print(e);
         _exceptionResponse(bytes, 2);
       }
     }

@@ -1,5 +1,4 @@
 import 'package:modbus/modbus.dart';
-import 'package:modbus/src/rtu/modbus_rtu_master.dart';
 import 'package:modbus/src/rtu/modbus_rtu_slave.dart';
 import 'package:modbus/src/rtu_master/rtu_master.dart';
 import 'package:serial/serial.dart';
@@ -10,15 +9,15 @@ abstract class ModbusMaster {
   // static ModbusMasterRTU RTU(SerialClient serial) {
   //   return ModbusMasterRTU(serial);
   // }
-   static ModbusMasterRTUTest RTU(SerialClient serial) {
+  static ModbusMasterRTUTest RTU(SerialClient serial) {
     return ModbusMasterRTUTest(serial);
   }
 
   static ModbusMasterTCP TCP(SerialClient serial) {
     return ModbusMasterTCP(serial);
   }
-  bool get connected;
 
+  bool get connected;
 
   void setSlaveId(int slaveId);
 
@@ -83,6 +82,12 @@ class HoldingRegistersConfig {
   int? Function(int address) readRegisters;
   HoldingRegistersConfig(this.start, this.end,
       {required this.writeRegisters, required this.readRegisters});
+
+  factory HoldingRegistersConfig.fromList(List<int> holdings) {
+    return HoldingRegistersConfig(0, holdings.length,
+        writeRegisters: (address, value) => holdings[address] = value,
+        readRegisters: (address) => holdings[address]);
+  }
 }
 
 class CoilsConfig {
