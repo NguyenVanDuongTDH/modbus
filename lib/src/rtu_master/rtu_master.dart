@@ -9,7 +9,7 @@ import 'package:modbus/src/tcp_master/modbus_tcp_master_core.dart';
 import 'package:serial/serial.dart';
 import 'rtu_request.dart';
 
-class ModbusMasterRTUTest extends ModbusMaster {
+class ModbusMasterRTU extends ModbusMaster {
   SerialClient _serial;
   int _slaveId = 1;
   Stack _stack = Stack();
@@ -18,7 +18,7 @@ class ModbusMasterRTUTest extends ModbusMaster {
   int _timeOut = 1000;
   bool _connected = false;
 
-  ModbusMasterRTUTest(SerialClient serial) : _serial = serial;
+  ModbusMasterRTU(SerialClient serial) : _serial = serial;
   @override
   bool get connected => _connected;
 

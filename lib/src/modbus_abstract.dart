@@ -8,8 +8,8 @@ import 'package:serial/serial.dart';
 import 'tcp_master/modbus_tcp_master.dart';
 
 abstract class ModbusMaster {
-  static ModbusMasterRTUTest RTU(SerialClient serial) {
-    return ModbusMasterRTUTest(serial);
+  static ModbusMasterRTU RTU(SerialClient serial) {
+    return ModbusMasterRTU(serial);
   }
   static ModbusMasterTCP TCP(SerialClient serial) {
     return ModbusMasterTCP(serial);
