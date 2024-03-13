@@ -24,8 +24,3 @@ export 'package:serial/serial.dart'
 export 'src/exceptions.dart' show ModbusException, ModbusError,ModbusErrorExtension;
 
 // TODO: Export any libraries intended for clients of this package.
-
-void _test(){
-  
-  print(1);
-}
