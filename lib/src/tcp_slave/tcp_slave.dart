@@ -1,7 +1,8 @@
+// ignore_for_file: prefer_final_fields
+
 import 'package:serial/serial.dart';
 
 import '../modbus_abstract.dart';
-import '../rtu_slave/modbus_rtu_slave_core.dart';
 import 'tcp_slave_core.dart';
 
 class ModbusSlaveTCP extends ModbusSlave {

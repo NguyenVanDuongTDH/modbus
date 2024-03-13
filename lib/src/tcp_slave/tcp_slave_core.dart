@@ -24,14 +24,33 @@ class ModbusTCPSlaveCore {
       isloop = true;
       do {
         await Future.delayed(const Duration(milliseconds: 1));
-      } while (
-          // !checkLength(_bytes) &&
+      } while (!checkLength(_bytes) &&
           DateTime.now().millisecondsSinceEpoch - timeStart < _timeOut);
       if (_bytes.length >= 8) {
         // process(Uint8List.fromList(_bytes));
       }
       _bytes.clear();
       isloop = false;
+    }
+  }
+
+  static bool checkLength(List<int> bytes) {
+    if (bytes.length > 256) return false;
+    if (bytes.length < 12) return false;
+    switch (bytes[1]) {
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+      case 6:
+        return bytes.length == 12;
+      case 15:
+      case 16:
+        // todo check length
+        return bytes.length == 6 + bytes[6];
+      default:
+        return false;
     }
   }
 }
