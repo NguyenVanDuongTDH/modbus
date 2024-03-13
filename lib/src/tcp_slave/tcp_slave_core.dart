@@ -1,5 +1,7 @@
 // ignore_for_file: prefer_final_fields
 
+import 'dart:typed_data';
+
 import 'package:modbus/src/tcp_slave/tcp_slave.dart';
 import 'package:serial/serial.dart';
 
@@ -27,14 +29,14 @@ class ModbusTCPSlaveCore {
       } while (!checkLength(_bytes) &&
           DateTime.now().millisecondsSinceEpoch - timeStart < _timeOut);
       if (_bytes.length >= 8) {
-        // process(Uint8List.fromList(_bytes));
+        process(Uint8List.fromList(_bytes));
       }
       _bytes.clear();
       isloop = false;
     }
   }
 
-  static bool checkLength(List<int> bytes) {
+  bool checkLength(List<int> bytes) {
     if (bytes.length > 256) return false;
     if (bytes.length < 12) return false;
     switch (bytes[1]) {
@@ -53,4 +55,6 @@ class ModbusTCPSlaveCore {
         return false;
     }
   }
+
+  void process(Uint8List uint8list) {}
 }
