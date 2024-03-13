@@ -1,14 +1,9 @@
-// ignore_for_file: prefer_final_fields, unused_field
-
 import 'dart:typed_data';
-
 import 'package:modbus/modbus.dart';
-import 'package:modbus/src/rtu_master/rtu_request.dart';
+import 'package:modbus/src/tcp_master/modbus_tcp_master_core.dart';
+import 'package:modbus/src/tcp_master_test/tcp_request.dart';
 
-import '../tcp_master/modbus_tcp_master_core.dart';
-import '../until.dart';
-
-class RtuResPonse {
+class ModbusTcpReponse {
   List<int> response = [];
   ModbusError error = ModbusError.Not_Error;
   int startTime = DateTime.now().millisecondsSinceEpoch;
@@ -17,7 +12,7 @@ class RtuResPonse {
     error = ModbusError.Not_Error;
   }
 
-  bool process(List<int> bytes, RtuRequest ctx, int timeOut) {
+  bool process(List<int> bytes, ModbusTcpRequest ctx, int timeOut) {
     if (DateTime.now().millisecondsSinceEpoch - startTime > timeOut) {
       error = ModbusError.Time_Out;
       return true;
@@ -45,29 +40,28 @@ class RtuResPonse {
     }
   }
 
-  bool checkError(List<int> bytes, RtuRequest ctx) {
-    if (bytes.length >= 5) {
-      if (bytes[0] != ctx.slaveId) {
-        error = (ModbusError.Invalid_SlaveID);
-        return true;
-      }
-      if (bytes[1] == ctx.function | 0x80) {
-        error = ModbusError.Slave_Error_Return;
-        return true;
-      }
-      if (bytes[1] != ctx.function) {
-        error = ModbusError.Invalid_Function;
-        return true;
-      }
+  bool checkError(List<int> bytes, ModbusTcpRequest ctx) {
+    if (bytes[6] != ctx.slaveId) {
+      //slaveid tcp
+      error = ModbusError.Invalid_SlaveID;
+      return true;
     }
+    if (bytes[7] == ctx.function | 0x80) {
+      //error tcp
+      error = ModbusError.Slave_Error_Return;
+      return true;
+    }
+    if (bytes[7] != ctx.function) {
+      //function tcp
+      error = ModbusError.Invalid_Function;
+      return true;
+    }
+
     return false;
   }
 
-  bool checkWriteRepose(List<int> bytes, RtuRequest ctx) {
+  bool checkWriteRepose(List<int> bytes, ModbusTcpRequest ctx) {
     if (bytes.length == 8) {
-      if (crcError(bytes)) {
-        return true;
-      }
       //TODO
       response.clear();
       response.add(0);
@@ -80,17 +74,14 @@ class RtuResPonse {
     }
   }
 
-  bool checkReadReponse(List<int> bytes, RtuRequest ctx) {
+  bool checkReadReponse(List<int> bytes, ModbusTcpRequest ctx) {
     if (bytes.length < 5 + bytes[2]) {
       return false;
     } else if (bytes.length > 5 + bytes[2]) {
       error = ModbusError.Error_Read_Request;
       return true;
     }
-    if (crcError(bytes)) {
-      return true;
-    }
-
+   
     switch (bytes[1]) {
       case ModbusFunctions.readCoils:
       case ModbusFunctions.readDiscreteInputs:
@@ -122,13 +113,5 @@ class RtuResPonse {
     }
   }
 
-  bool crcError(List<int> bytes) {
-    if (bytes[bytes.length - 2] | bytes[bytes.length - 1] << 8 ==
-        crc16(Uint8List.fromList(bytes), bytes.length - 2)) {
-      return false;
-    } else {
-      error = ModbusError.Invalid_CRC;
-      return true;
-    }
-  }
+
 }
